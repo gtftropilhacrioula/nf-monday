@@ -21,75 +21,53 @@ def extrair_texto_pdf(file):
     return texto
 
 def extrair_dados_nf(texto):
-    prompt = f"""Você é um especialista em notas fiscais brasileiras.
-Analise o texto abaixo de uma NF-e e extraia as informações em JSON.
-
-Retorne APENAS um JSON válido, sem explicações, sem markdown, sem backticks.
-
-Formato esperado:
-{{
-  "numero_nf": "000.071.604",
-  "data_emissao": "2026-06-03",
-  "fornecedor": "Nome do fornecedor",
-  "canal_compra": "Mercado Livre",
-  "itens": [
-    {{
-      "nome": "Nome do produto",
-      "quantidade": 1,
-      "valor_unitario": 346.64
-    }}
-  ]
-}}
-
-Para canal_compra, tente identificar se é: Mercado Livre, Magazine Luiza, Shopee, Amazon, Americanas, Loja Física, ou Outro.
-Se não conseguir identificar, coloque "Não identificado".
-
-Texto da NF:
-{texto}"""
+    prompt = (
+        "Voce e um especialista em notas fiscais brasileiras.\n"
+        "Analise o texto abaixo de uma NF-e e extraia as informacoes em JSON.\n\n"
+        "Retorne APENAS um JSON valido, sem explicacoes, sem markdown, sem backticks.\n\n"
+        "Formato esperado:\n"
+        '{"numero_nf": "000.071.604", "data_emissao": "2026-06-03", "fornecedor": "Nome do fornecedor", '
+        '"canal_compra": "Mercado Livre", "itens": [{"nome": "Nome do produto", "quantidade": 1, "valor_unitario": 346.64}]}\n\n'
+        "Para canal_compra, tente identificar se e: Mercado Livre, Magazine Luiza, Shopee, Amazon, Americanas, Loja Fisica, ou Outro.\n"
+        "Se nao conseguir identificar, coloque Nao identificado.\n\n"
+        "Texto da NF:\n" + texto
+    )
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1000,
-        messages=[{{"role": "user", "content": prompt}}]
+        messages=[{"role": "user", "content": prompt}]
     )
-    
+
     resposta = message.content[0].text.strip()
     return json.loads(resposta)
 
 def inserir_item_monday(item, numero_nf, data_emissao, responsavel, local, canal_compra):
     url = "https://api.monday.com/v2"
-    headers = {{
+    headers = {
         "Authorization": MONDAY_API_KEY,
         "Content-Type": "application/json"
-    }}
-    
-    column_values = json.dumps({{
-        "date4": {{"date": data_emissao}},
+    }
+
+    data_formatada = data_emissao if data_emissao else ""
+
+    column_values = json.dumps({
+        "date4": {"date": data_formatada},
         "text6": numero_nf,
         "numbers": item["valor_unitario"],
         "numeric": item["quantidade"],
-        "canal_de_compra": {{"text": canal_compra}},
-    }})
+        "canal_de_compra": {"text": canal_compra},
+    })
 
-    query = """
-    mutation ($board: ID!, $item_name: String!, $column_values: JSON!) {{
-      create_item(
-        board_id: $board,
-        item_name: $item_name,
-        column_values: $column_values
-      ) {{
-        id
-      }}
-    }}
-    """
-    
-    variables = {{
+    query = "mutation ($board: ID!, $item_name: String!, $column_values: JSON!) { create_item(board_id: $board, item_name: $item_name, column_values: $column_values) { id } }"
+
+    variables = {
         "board": int(MONDAY_BOARD_ID),
         "item_name": item["nome"],
         "column_values": column_values
-    }}
+    }
 
-    response = requests.post(url, json={{"query": query, "variables": variables}}, headers=headers)
+    response = requests.post(url, json={"query": query, "variables": variables}, headers=headers)
     return response.json()
 
 @app.route("/")
@@ -101,12 +79,12 @@ def upload():
     try:
         file = request.files.get("pdf")
         if not file:
-            return jsonify({{"erro": "Nenhum arquivo enviado"}}), 400
+            return jsonify({"erro": "Nenhum arquivo enviado"}), 400
         texto = extrair_texto_pdf(file)
         dados = extrair_dados_nf(texto)
         return jsonify(dados)
     except Exception as e:
-        return jsonify({{"erro": str(e)}}), 500
+        return jsonify({"erro": str(e)}), 500
 
 @app.route("/enviar", methods=["POST"])
 def enviar():
@@ -114,4 +92,19 @@ def enviar():
         data = request.json
         itens = data.get("itens", [])
         numero_nf = data.get("numero_nf", "")
-        data_emissao =
+        data_emissao = data.get("data_emissao", "")
+        responsavel = data.get("responsavel", "")
+        local = data.get("local", "")
+        canal_compra = data.get("canal_compra", "")
+
+        resultados = []
+        for item in itens:
+            r = inserir_item_monday(item, numero_nf, data_emissao, responsavel, local, canal_compra)
+            resultados.append(r)
+
+        return jsonify({"sucesso": True, "resultados": resultados})
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
