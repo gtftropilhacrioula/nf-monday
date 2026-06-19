@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NF → Monday</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; min-height: 100vh; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { color: #333; margin-bottom: 24px; font-size: 22px; }
+    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    label { display: block; font-weight: bold; margin-bottom: 6px; color: #555; font-size: 14px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin-bottom: 16px; }
+    .btn { width: 100%; padding: 14px; background: #0073ea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .btn:hover { background: #0060c0; }
+    .btn:disabled { background: #aaa; cursor: not-allowed; }
+    .btn-success { background: #00c875; }
+    .btn-success:hover { background: #00a65e; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { background: #f7f7f7; padding: 10px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #eee; }
+    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    td input { margin-bottom: 0; padding: 6px 8px; }
+    .info-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .info-row > div { flex: 1; min-width: 140px; }
+    .tag { display: inline-block; background: #e8f4fd; color: #0073ea; padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-bottom: 12px; }
+    #status { text-align: center; padding: 16px; border-radius: 8px; font-weight: bold; display: none; }
+    .status-erro { background: #fde8e8; color: #cc0000; }
+    .loading { text-align: center; color: #888; padding: 20px; display: none; }
+    #tela-upload { }
+    #tela-revisao { display: none; }
+    #tela-sucesso { display: none; text-align: center; padding: 40px 20px; }
+    #tela-sucesso h2 { color: #00c875; font-size: 28px; margin-bottom: 10px; }
+    #tela-sucesso p { color: #555; margin-bottom: 20px; }
+    .novo-btn { background: #0073ea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📄 NF → Monday</h1>
+
+  <div id="tela-upload">
+    <div class="card">
+      <label>Selecione o PDF da Nota Fiscal</label>
+      <input type="file" id="pdf-input" accept=".pdf">
+      <button class="btn" onclick="processarPDF()">Processar NF</button>
+    </div>
+    <div class="loading" id="loading-upload">⏳ Lendo a nota fiscal... aguarde.</div>
+  </div>
+
+  <div id="tela-revisao">
+    <div class="card">
+      <span class="tag" id="tag-nf"></span>
+      <div class="info-row">
+        <div>
+          <label>Data de Emissão</label>
+          <input type="date" id="data-emissao">
+        </div>
+        <div>
+          <label>Canal de Compra</label>
+          <input type="text" id="canal-compra">
+        </div>
+      </div>
+      <div class="info-row">
+        <div>
+          <label>Local</label>
+          <input type="text" id="local" placeholder="Ex: Galpão Campeiro">
+        </div>
+        <div>
+          <label>Responsável</label>
+          <input type="text" id="responsavel" placeholder="Nome do responsável">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Itens da Nota Fiscal</label>
+      <table>
+        <thead>
+          <tr><th>Produto</th><th>Qtd</th><th>Valor Unit.</th></tr>
+        </thead>
+        <tbody id="tabela-itens"></tbody>
+      </table>
+    </div>
+
+    <div id="status"></div>
+    <div class="loading" id="loading-envio">⏳ Enviando para o Monday...</div>
+    <button class="btn btn-success" onclick="enviarParaMonday()">✅ Confirmar e Enviar ao Monday</button>
+  </div>
+
+  <div id="tela-sucesso">
+    <div class="card">
+      <h2>✅ Enviado!</h2>
+      <p id="msg-sucesso"></p>
+      <button class="novo-btn" onclick="reiniciar()">Processar nova NF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let dadosNF = null;
+
+async function processarPDF() {
+  const file = document.getElementById('pdf-input').files[0];
+  if (!file) { alert('Selecione um PDF!'); return; }
+  document.getElementById('loading-upload').style.display = 'block';
+  document.querySelector('#tela-upload .btn').disabled = true;
+  const formData = new FormData();
+  formData.append('pdf', file);
+  try {
+    const res = await fetch('/upload', { method: 'POST', body: formData });
+    dadosNF = await res.json();
+    if (dadosNF.erro) throw new Error(dadosNF.erro);
+    preencherRevisao(dadosNF);
+    document.getElementById('tela-upload').style.display = 'none';
+    document.getElementById('tela-revisao').style.display = 'block';
+  } catch (e) {
+    alert('Erro ao processar PDF: ' + e.message);
+  } finally {
+    document.getElementById('loading-upload').style.display = 'none';
+    document.querySelector('#tela-upload .btn').disabled = false;
+  }
+}
+
+function preencherRevisao(dados) {
+  document.getElementById('tag-nf').textContent = 'NF ' + (dados.numero_nf || '') + ' — ' + (dados.fornecedor || '');
+  document.getElementById('data-emissao').value = dados.data_emissao || '';
+  document.getElementById('canal-compra').value = dados.canal_compra || '';
+  const tbody = document.getElementById('tabela-itens');
+  tbody.innerHTML = '';
+  (dados.itens || []).forEach((item, i) => {
+    tbody.innerHTML += `<tr>
+      <td><input type="text" id="nome-${i}" value="${item.nome}"></td>
+      <td><input type="number" id="qtd-${i}" value="${item.quantidade}" style="width:70px"></td>
+      <td><input type="number" id="valor-${i}" value="${item.valor_unitario}" step="0.01" style="width:100px"></td>
+    </tr>`;
+  });
+}
+
+async function enviarParaMonday() {
+  const itens = (dadosNF.itens || []).map((_, i) => ({
+    nome: document.getElementById(`nome-${i}`).value,
+    quantidade: parseFloat(document.getElementById(`qtd-${i}`).value),
+    valor_unitario: parseFloat(document.getElementById(`valor-${i}`).value),
+  }));
+  const payload = {
+    numero_nf: document.getElementById('tag-nf').textContent.split('—')[0].replace('NF ','').trim(),
+    data_emissao: document.getElementById('data-emissao').value,
+    canal_compra: document.getElementById('canal-compra').value,
+    local: document.getElementById('local').value,
+    responsavel: document.getElementById('responsavel').value,
+    itens
+  };
+  document.getElementById('loading-envio').style.display = 'block';
+  document.querySelector('.btn-success').disabled = true;
+  try {
+    const res = await fetch('/enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (result.erro) throw new Error(result.erro);
+    document.getElementById('tela-revisao').style.display = 'none';
+    document.getElementById('tela-sucesso').style.display = 'block';
+    document.getElementById('msg-sucesso').textContent = `${itens.length} item(s) inserido(s) no Monday com sucesso!`;
+  } catch (e) {
+    const s = document.getElementById('status');
+    s.textContent = 'Erro: ' + e.message;
+    s.className = 'status-erro';
+    s.style.display = 'block';
+  } finally {
+    document.getElementById('loading-envio').style.display = 'none';
+    document.querySelector('.btn-success').disabled = false;
+  }
+}
+
+function reiniciar() {
+  dadosNF = null;
+  document.getElementById('pdf-input').value = '';
+  document.getElementById('tela-sucesso').style.display = 'none';
+  document.getElementById('tela-upload').style.display = 'block';
+}
+</script>
+</body>
+</html>
