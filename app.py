@@ -75,3 +75,60 @@ def criar_item_monday(item, numero_nf, data_emissao, local, canal_compra):
 
 def anexar_pdf_monday(item_id, pdf_bytes, filename):
     url = "https://api.monday.com/v2/file"
+    headers = {"Authorization": MONDAY_API_KEY}
+
+    query = "mutation ($file: File!) { add_file_to_column(item_id: %s, column_id: \"file_mky8cexx\", file: $file) { id } }" % item_id
+
+    files = {
+        "query": (None, query),
+        "variables[file]": (filename, pdf_bytes, "application/pdf")
+    }
+
+    response = requests.post(url, headers=headers, files=files)
+    return response.json()
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    try:
+        file = request.files.get("pdf")
+        if not file:
+            return jsonify({"erro": "Nenhum arquivo enviado"}), 400
+        texto = extrair_texto_pdf(file)
+        dados = extrair_dados_nf(texto)
+        return jsonify(dados)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/enviar", methods=["POST"])
+def enviar():
+    try:
+        data = request.form
+        pdf_file = request.files.get("pdf")
+        pdf_bytes = pdf_file.read() if pdf_file else None
+        pdf_name = pdf_file.filename if pdf_file else "nota_fiscal.pdf"
+
+        itens = json.loads(data.get("itens", "[]"))
+        numero_nf = data.get("numero_nf", "")
+        data_emissao = data.get("data_emissao", "")
+        local = data.get("local", "")
+        canal_compra = data.get("canal_compra", "")
+
+        item_ids = []
+        for item in itens:
+            item_id = criar_item_monday(item, numero_nf, data_emissao, local, canal_compra)
+            item_ids.append(item_id)
+
+        if pdf_bytes:
+            for item_id in item_ids:
+                anexar_pdf_monday(item_id, pdf_bytes, pdf_name)
+
+        return jsonify({"sucesso": True, "total": len(item_ids)})
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
