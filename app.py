@@ -42,7 +42,7 @@ def extrair_dados_nf(texto):
     resposta = message.content[0].text.strip()
     return json.loads(resposta)
 
-def inserir_item_monday(item, numero_nf, data_emissao, responsavel, local, canal_compra):
+def criar_item_monday(item, numero_nf, data_emissao, responsavel, local, canal_compra):
     url = "https://api.monday.com/v2"
     headers = {
         "Authorization": MONDAY_API_KEY,
@@ -52,59 +52,8 @@ def inserir_item_monday(item, numero_nf, data_emissao, responsavel, local, canal
     data_formatada = data_emissao if data_emissao else ""
 
     column_values = json.dumps({
-        "date4": {"date": data_formatada},
-        "text6": numero_nf,
-        "numbers": item["valor_unitario"],
-        "numeric": item["quantidade"],
-        "canal_de_compra": {"text": canal_compra},
-    })
-
-    query = "mutation ($board: ID!, $item_name: String!, $column_values: JSON!) { create_item(board_id: $board, item_name: $item_name, column_values: $column_values) { id } }"
-
-    variables = {
-        "board": int(MONDAY_BOARD_ID),
-        "item_name": item["nome"],
-        "column_values": column_values
-    }
-
-    response = requests.post(url, json={"query": query, "variables": variables}, headers=headers)
-    return response.json()
-
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-@app.route("/upload", methods=["POST"])
-def upload():
-    try:
-        file = request.files.get("pdf")
-        if not file:
-            return jsonify({"erro": "Nenhum arquivo enviado"}), 400
-        texto = extrair_texto_pdf(file)
-        dados = extrair_dados_nf(texto)
-        return jsonify(dados)
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
-
-@app.route("/enviar", methods=["POST"])
-def enviar():
-    try:
-        data = request.json
-        itens = data.get("itens", [])
-        numero_nf = data.get("numero_nf", "")
-        data_emissao = data.get("data_emissao", "")
-        responsavel = data.get("responsavel", "")
-        local = data.get("local", "")
-        canal_compra = data.get("canal_compra", "")
-
-        resultados = []
-        for item in itens:
-            r = inserir_item_monday(item, numero_nf, data_emissao, responsavel, local, canal_compra)
-            resultados.append(r)
-
-        return jsonify({"sucesso": True, "resultados": resultados})
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        "data": {"date": data_formatada},
+        "text_mm4gqxsy": numero_nf,
+        "numeric_mky8bk22": item["valor_unitario"],
+        "numeric_mm2wge9s": item["quantidade"],
+        "text_mm4f77m6": canal_compra,
