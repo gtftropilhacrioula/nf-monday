@@ -42,7 +42,7 @@ def extrair_dados_nf(texto):
     resposta = message.content[0].text.strip()
     return json.loads(resposta)
 
-def criar_item_monday(item, numero_nf, data_emissao, responsavel, local, canal_compra):
+def criar_item_monday(item, numero_nf, data_emissao, local, canal_compra):
     url = "https://api.monday.com/v2"
     headers = {
         "Authorization": MONDAY_API_KEY,
@@ -57,3 +57,21 @@ def criar_item_monday(item, numero_nf, data_emissao, responsavel, local, canal_c
         "numeric_mky8bk22": item["valor_unitario"],
         "numeric_mm2wge9s": item["quantidade"],
         "text_mm4f77m6": canal_compra,
+        "dropdown_mm2s9w16": {"labels": [local]},
+        "color_mm4g90ps": {"index": 0},
+    })
+
+    query = "mutation ($board: ID!, $item_name: String!, $column_values: JSON!) { create_item(board_id: $board, item_name: $item_name, column_values: $column_values) { id } }"
+
+    variables = {
+        "board": int(MONDAY_BOARD_ID),
+        "item_name": item["nome"],
+        "column_values": column_values
+    }
+
+    response = requests.post(url, json={"query": query, "variables": variables}, headers=headers)
+    result = response.json()
+    return result["data"]["create_item"]["id"]
+
+def anexar_pdf_monday(item_id, pdf_bytes, filename):
+    url = "https://api.monday.com/v2/file"
