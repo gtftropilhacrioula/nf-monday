@@ -6,193 +6,347 @@
   <title>NF → Monday</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #f0f2f5; min-height: 100vh; padding: 20px; }
-    .container { max-width: 700px; margin: 0 auto; }
-    h1 { color: #333; margin-bottom: 24px; font-size: 22px; }
-    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    label { display: block; font-weight: bold; margin-bottom: 6px; color: #555; font-size: 14px; }
-    input[type="text"], input[type="date"], input[type="number"], input[type="file"] { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin-bottom: 16px; }
-    .btn { width: 100%; padding: 14px; background: #0073ea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; min-height: 100vh; padding: 16px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { color: #333; margin-bottom: 20px; font-size: 22px; }
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .btn { padding: 12px 24px; background: #0073ea; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
     .btn:hover { background: #0060c0; }
     .btn:disabled { background: #aaa; cursor: not-allowed; }
     .btn-success { background: #00c875; }
     .btn-success:hover { background: #00a65e; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th { background: #f7f7f7; padding: 10px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #eee; }
-    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-    td input { margin-bottom: 0; padding: 6px 8px; }
-    .info-row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .info-row > div { flex: 1; min-width: 140px; }
-    .tag { display: inline-block; background: #e8f4fd; color: #0073ea; padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-bottom: 12px; }
-    #status { text-align: center; padding: 16px; border-radius: 8px; font-weight: bold; display: none; margin-bottom: 12px; }
-    .status-erro { background: #fde8e8; color: #cc0000; }
-    .loading { text-align: center; color: #888; padding: 20px; display: none; }
+    .btn-danger { background: #e44258; }
+    label { font-weight: bold; font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
+    input[type="text"], input[type="date"], input[type="number"], select {
+      width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;
+    }
+    .nf-block { border: 2px solid #e0e0e0; border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+    .nf-header { background: #f7f9fc; padding: 14px 16px; border-bottom: 1px solid #e0e0e0; }
+    .nf-header-tag { font-size: 13px; font-weight: bold; color: #0073ea; margin-bottom: 10px; }
+    .nf-fields { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .nf-fields > div { flex: 1; min-width: 130px; }
+    .nf-fields select, .nf-fields input { font-size: 13px; }
+    .itens-table { width: 100%; border-collapse: collapse; }
+    .itens-table th { background: #f0f2f5; padding: 8px 10px; text-align: left; font-size: 12px; color: #666; border-bottom: 2px solid #e0e0e0; }
+    .itens-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+    .itens-table td input { padding: 5px 7px; font-size: 13px; }
+    .itens-table tr.desativado td { opacity: 0.4; }
+    .outro-canal { margin-top: 6px; display: none; }
+    .loading { text-align: center; color: #888; padding: 16px; display: none; }
     #tela-revisao { display: none; }
-    #tela-sucesso { display: none; }
-    #tela-sucesso h2 { color: #00c875; font-size: 28px; margin-bottom: 10px; }
+    #tela-sucesso { display: none; text-align: center; padding: 40px 20px; }
+    #tela-sucesso h2 { color: #00c875; font-size: 26px; margin-bottom: 10px; }
     #tela-sucesso p { color: #555; margin-bottom: 20px; }
-    .novo-btn { background: #0073ea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; cursor: pointer; }
-    .locais-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-    .local-option { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
-    .local-option:hover { border-color: #0073ea; background: #f0f7ff; }
-    .local-option input[type="radio"] { width: auto; margin: 0; padding: 0; accent-color: #0073ea; }
-    .local-option.selecionado { border-color: #0073ea; background: #e8f4fd; font-weight: bold; }
+    .alerta-duplicata { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px; }
+    .alerta-duplicata strong { color: #856404; }
+    .upload-area { border: 2px dashed #ccc; border-radius: 10px; padding: 24px; text-align: center; margin-bottom: 16px; cursor: pointer; }
+    .upload-area:hover { border-color: #0073ea; background: #f0f7ff; }
+    .actions-bar { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+    .badge-nf { display: inline-block; background: #e8f4fd; color: #0073ea; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; }
   </style>
 </head>
 <body>
 <div class="container">
   <h1>📄 NF → Monday</h1>
 
+  <!-- TELA UPLOAD -->
   <div id="tela-upload">
     <div class="card">
-      <label>Selecione o PDF da Nota Fiscal</label>
-      <input type="file" id="pdf-input" accept=".pdf">
-      <button class="btn" onclick="processarPDF()">Processar NF</button>
+      <label>Selecione até 10 PDFs de Notas Fiscais</label>
+      <div class="upload-area" onclick="document.getElementById('pdf-input').click()">
+        📎 Clique aqui para selecionar os PDFs
+        <div style="font-size:12px;color:#999;margin-top:6px">Até 10 arquivos simultâneos</div>
+      </div>
+      <input type="file" id="pdf-input" accept=".pdf" multiple style="display:none" onchange="atualizarLista()">
+      <div id="lista-arquivos" style="margin-bottom:16px;font-size:13px;color:#555;"></div>
+      <button class="btn" onclick="processarTodos()">Processar NFs</button>
     </div>
-    <div class="loading" id="loading-upload">⏳ Lendo a nota fiscal... aguarde.</div>
+    <div class="loading" id="loading-upload">⏳ Processando notas fiscais... aguarde.</div>
   </div>
 
+  <!-- TELA REVISAO -->
   <div id="tela-revisao">
-    <div class="card">
-      <span class="tag" id="tag-nf"></span>
-      <div class="info-row">
-        <div>
-          <label>Data de Emissão</label>
-          <input type="date" id="data-emissao">
-        </div>
-        <div>
-          <label>Canal de Compra</label>
-          <input type="text" id="canal-compra">
-        </div>
-      </div>
-      <label>Local</label>
-      <div class="locais-grid">
-        <label class="local-option" onclick="selecionarLocal(this)">
-          <input type="radio" name="local" value="Galpão Campeiro"> Galpão Campeiro
-        </label>
-        <label class="local-option" onclick="selecionarLocal(this)">
-          <input type="radio" name="local" value="Moveis"> Moveis
-        </label>
-        <label class="local-option" onclick="selecionarLocal(this)">
-          <input type="radio" name="local" value="Padrão"> Padrão
-        </label>
-        <label class="local-option" onclick="selecionarLocal(this)">
-          <input type="radio" name="local" value="Secretaria"> Secretaria
-        </label>
-      </div>
+    <div id="alertas-duplicata"></div>
+    <div id="blocos-nf"></div>
+    <div class="actions-bar">
+      <button class="btn btn-success" onclick="enviarTodos()">✅ Confirmar e Enviar ao Monday</button>
     </div>
-
-    <div class="card">
-      <label>Itens da Nota Fiscal</label>
-      <table>
-        <thead>
-          <tr><th>Produto</th><th>Qtd</th><th>Valor Unit.</th></tr>
-        </thead>
-        <tbody id="tabela-itens"></tbody>
-      </table>
-    </div>
-
-    <div id="status"></div>
     <div class="loading" id="loading-envio">⏳ Enviando para o Monday...</div>
-    <button class="btn btn-success" onclick="enviarParaMonday()">✅ Confirmar e Enviar ao Monday</button>
   </div>
 
+  <!-- TELA SUCESSO -->
   <div id="tela-sucesso">
     <div class="card">
       <h2>✅ Enviado!</h2>
       <p id="msg-sucesso"></p>
-      <button class="novo-btn" onclick="reiniciar()">Processar nova NF</button>
+      <button class="btn" onclick="reiniciar()">Processar novas NFs</button>
     </div>
   </div>
 </div>
 
 <script>
-let dadosNF = null;
+let nfsProcessadas = [];
+let config = {};
+const NFS_ENVIADAS_KEY = "nfs_enviadas";
 
-function selecionarLocal(el) {
-  document.querySelectorAll(".local-option").forEach(o => o.classList.remove("selecionado"));
-  el.classList.add("selecionado");
+function getNfsEnviadas() {
+  try { return JSON.parse(localStorage.getItem(NFS_ENVIADAS_KEY) || "{}"); } catch { return {}; }
+}
+function salvarNfEnviada(numero_nf) {
+  const enviadas = getNfsEnviadas();
+  enviadas[numero_nf] = new Date().toISOString();
+  localStorage.setItem(NFS_ENVIADAS_KEY, JSON.stringify(enviadas));
 }
 
-async function processarPDF() {
-  const file = document.getElementById('pdf-input').files[0];
-  if (!file) { alert('Selecione um PDF!'); return; }
+function atualizarLista() {
+  const files = document.getElementById('pdf-input').files;
+  const div = document.getElementById('lista-arquivos');
+  div.innerHTML = Array.from(files).map(f => `📄 ${f.name}`).join('<br>');
+}
+
+async function processarTodos() {
+  const files = document.getElementById('pdf-input').files;
+  if (!files.length) { alert('Selecione ao menos um PDF!'); return; }
+  if (files.length > 10) { alert('Máximo 10 arquivos!'); return; }
+
   document.getElementById('loading-upload').style.display = 'block';
   document.querySelector('#tela-upload .btn').disabled = true;
-  const formData = new FormData();
-  formData.append('pdf', file);
-  try {
-    const res = await fetch('/upload', { method: 'POST', body: formData });
-    dadosNF = await res.json();
-    if (dadosNF.erro) throw new Error(dadosNF.erro);
-    preencherRevisao(dadosNF);
-    document.getElementById('tela-upload').style.display = 'none';
-    document.getElementById('tela-revisao').style.display = 'block';
-  } catch (e) {
-    alert('Erro ao processar PDF: ' + e.message);
-  } finally {
-    document.getElementById('loading-upload').style.display = 'none';
-    document.querySelector('#tela-upload .btn').disabled = false;
+
+  // Carregar config
+  const cfgRes = await fetch('/config');
+  config = await cfgRes.json();
+
+  nfsProcessadas = [];
+  for (const file of Array.from(files)) {
+    const formData = new FormData();
+    formData.append('pdf', file);
+    try {
+      const res = await fetch('/upload', { method: 'POST', body: formData });
+      const dados = await res.json();
+      if (!dados.erro) {
+        dados._file = file;
+        nfsProcessadas.push(dados);
+      }
+    } catch(e) { console.error(e); }
   }
+
+  document.getElementById('loading-upload').style.display = 'none';
+  document.querySelector('#tela-upload .btn').disabled = false;
+
+  if (!nfsProcessadas.length) { alert('Nenhuma NF pôde ser processada.'); return; }
+
+  renderizarRevisao();
+  document.getElementById('tela-upload').style.display = 'none';
+  document.getElementById('tela-revisao').style.display = 'block';
 }
 
-function preencherRevisao(dados) {
-  document.getElementById('tag-nf').textContent = 'NF ' + (dados.numero_nf || '') + ' — ' + (dados.fornecedor || '');
-  document.getElementById('data-emissao').value = dados.data_emissao || '';
-  document.getElementById('canal-compra').value = dados.canal_compra || '';
-  const tbody = document.getElementById('tabela-itens');
-  tbody.innerHTML = '';
-  (dados.itens || []).forEach((item, i) => {
-    tbody.innerHTML += `<tr>
-      <td><input type="text" id="nome-${i}" value="${item.nome}"></td>
-      <td><input type="number" id="qtd-${i}" value="${item.quantidade}" style="width:70px"></td>
-      <td><input type="number" id="valor-${i}" value="${item.valor_unitario}" step="0.01" style="width:100px"></td>
-    </tr>`;
+function renderizarRevisao() {
+  const enviadas = getNfsEnviadas();
+  const alertasDiv = document.getElementById('alertas-duplicata');
+  const blocosDiv = document.getElementById('blocos-nf');
+  alertasDiv.innerHTML = '';
+  blocosDiv.innerHTML = '';
+
+  nfsProcessadas.forEach((nf, nfIdx) => {
+    if (enviadas[nf.numero_nf]) {
+      alertasDiv.innerHTML += `
+        <div class="alerta-duplicata">
+          ⚠️ <strong>NF ${nf.numero_nf}</strong> já foi enviada em ${new Date(enviadas[nf.numero_nf]).toLocaleString('pt-BR')}.
+          <label style="display:inline;font-weight:normal;margin-left:10px;">
+            <input type="checkbox" id="forcar-${nfIdx}"> Enviar mesmo assim
+          </label>
+        </div>`;
+    }
+
+    const canalOpts = config.canais.map(c =>
+      `<option value="${c}" ${nf.canal_compra === c ? 'selected' : ''}>${c}</option>`
+    ).join('');
+
+    const localOpts = config.locais.map(l =>
+      `<option value="${l}">${l}</option>`
+    ).join('');
+
+    const deptOpts = ['', ...config.departamentos, '__novo__'].map(d =>
+      d === '__novo__' ? `<option value="__novo__">+ Novo...</option>` :
+      d === '' ? `<option value="">-- Selecione --</option>` :
+      `<option value="${d}">${d}</option>`
+    ).join('');
+
+    const localItemOpts = ['', ...config.locais_item, '__novo__'].map(l =>
+      l === '__novo__' ? `<option value="__novo__">+ Novo...</option>` :
+      l === '' ? `<option value="">-- Selecione --</option>` :
+      `<option value="${l}">${l}</option>`
+    ).join('');
+
+    const itensRows = nf.itens.map((item, iIdx) => `
+      <tr id="row-${nfIdx}-${iIdx}">
+        <td><input type="checkbox" checked onchange="toggleItem(${nfIdx},${iIdx},this)"></td>
+        <td><input type="text" id="nome-${nfIdx}-${iIdx}" value="${item.nome}" style="width:100%"></td>
+        <td><input type="number" id="qtd-${nfIdx}-${iIdx}" value="${item.quantidade}" style="width:70px"></td>
+        <td><input type="number" id="valor-${nfIdx}-${iIdx}" value="${item.valor_unitario}" step="0.01" style="width:100px"></td>
+      </tr>`).join('');
+
+    blocosDiv.innerHTML += `
+      <div class="nf-block" id="nf-block-${nfIdx}">
+        <div class="nf-header">
+          <div class="nf-header-tag">
+            <span class="badge-nf">NF ${nf.numero_nf}</span> ${nf.fornecedor || ''}
+          </div>
+          <div class="nf-fields">
+            <div>
+              <label>Data Emissão</label>
+              <input type="date" id="data-${nfIdx}" value="${nf.data_emissao || ''}">
+            </div>
+            <div>
+              <label>Canal de Compra</label>
+              <select id="canal-${nfIdx}" onchange="toggleOutroCanal(${nfIdx})">
+                ${canalOpts}
+              </select>
+              <input type="text" class="outro-canal" id="canal-outro-${nfIdx}" placeholder="Informe o canal...">
+            </div>
+            <div>
+              <label>Local</label>
+              <select id="local-${nfIdx}">${localOpts}</select>
+            </div>
+            <div>
+              <label>Departamento</label>
+              <select id="dept-${nfIdx}" onchange="toggleNovo('dept-novo-${nfIdx}', this)">
+                ${deptOpts}
+              </select>
+              <input type="text" class="outro-canal" id="dept-novo-${nfIdx}" placeholder="Novo departamento...">
+            </div>
+            <div>
+              <label>Local do Item</label>
+              <select id="localitem-${nfIdx}" onchange="toggleNovo('localitem-novo-${nfIdx}', this)">
+                ${localItemOpts}
+              </select>
+              <input type="text" class="outro-canal" id="localitem-novo-${nfIdx}" placeholder="Novo local...">
+            </div>
+            <div>
+              <label>Obs. Local</label>
+              <input type="text" id="obs-${nfIdx}" placeholder="Observação...">
+            </div>
+          </div>
+        </div>
+        <table class="itens-table">
+          <thead><tr><th></th><th>Produto</th><th>Qtd</th><th>Valor Unit.</th></tr></thead>
+          <tbody>${itensRows}</tbody>
+        </table>
+      </div>`;
+
+    // Verificar se canal é "Outro" ao renderizar
+    setTimeout(() => toggleOutroCanal(nfIdx), 100);
   });
 }
 
-async function enviarParaMonday() {
-  const localSelecionado = document.querySelector('input[name="local"]:checked');
-  if (!localSelecionado) { alert('Selecione um local!'); return; }
+function toggleOutroCanal(nfIdx) {
+  const sel = document.getElementById(`canal-${nfIdx}`);
+  const outro = document.getElementById(`canal-outro-${nfIdx}`);
+  outro.style.display = sel.value === 'Outro' ? 'block' : 'none';
+}
 
-  const itens = (dadosNF.itens || []).map((_, i) => ({
-    nome: document.getElementById(`nome-${i}`).value,
-    quantidade: parseFloat(document.getElementById(`qtd-${i}`).value),
-    valor_unitario: parseFloat(document.getElementById(`valor-${i}`).value),
-  }));
+function toggleNovo(inputId, sel) {
+  const inp = document.getElementById(inputId);
+  inp.style.display = sel.value === '__novo__' ? 'block' : 'none';
+}
 
-  const formData = new FormData();
-  formData.append("pdf", document.getElementById("pdf-input").files[0]);
-  formData.append("itens", JSON.stringify(itens));
-  formData.append("numero_nf", document.getElementById("tag-nf").textContent.split("—")[0].replace("NF ","").trim());
-  formData.append("data_emissao", document.getElementById("data-emissao").value);
-  formData.append("canal_compra", document.getElementById("canal-compra").value);
-  formData.append("local", localSelecionado.value);
+function toggleItem(nfIdx, iIdx, cb) {
+  const row = document.getElementById(`row-${nfIdx}-${iIdx}`);
+  row.classList.toggle('desativado', !cb.checked);
+}
 
-  document.getElementById("loading-envio").style.display = "block";
-  document.querySelector(".btn-success").disabled = true;
+async function enviarTodos() {
+  const enviadas = getNfsEnviadas();
+  document.getElementById('loading-envio').style.display = 'block';
+  document.querySelector('.btn-success').disabled = true;
 
-  try {
-    const res = await fetch("/enviar", { method: "POST", body: formData });
-    const result = await res.json();
-    if (result.erro) throw new Error(result.erro);
-    document.getElementById("tela-revisao").style.display = "none";
-    document.getElementById("tela-sucesso").style.display = "block";
-    document.getElementById("msg-sucesso").textContent = `${itens.length} item(s) inserido(s) no Monday com sucesso!`;
-  } catch (e) {
-    const s = document.getElementById("status");
-    s.textContent = "Erro: " + e.message;
-    s.className = "status-erro";
-    s.style.display = "block";
-  } finally {
-    document.getElementById("loading-envio").style.display = "none";
-    document.querySelector(".btn-success").disabled = false;
+  let totalEnviados = 0;
+
+  for (let nfIdx = 0; nfIdx < nfsProcessadas.length; nfIdx++) {
+    const nf = nfsProcessadas[nfIdx];
+    const forcar = document.getElementById(`forcar-${nfIdx}`);
+
+    if (enviadas[nf.numero_nf] && (!forcar || !forcar.checked)) continue;
+
+    const canalSel = document.getElementById(`canal-${nfIdx}`).value;
+    const canal = canalSel === 'Outro'
+      ? document.getElementById(`canal-outro-${nfIdx}`).value
+      : canalSel;
+
+    const deptSel = document.getElementById(`dept-${nfIdx}`).value;
+    let dept = deptSel === '__novo__'
+      ? document.getElementById(`dept-novo-${nfIdx}`).value
+      : deptSel;
+
+    const liSel = document.getElementById(`localitem-${nfIdx}`).value;
+    let localItem = liSel === '__novo__'
+      ? document.getElementById(`localitem-novo-${nfIdx}`).value
+      : liSel;
+
+    // Criar labels novos se necessário
+    if (deptSel === '__novo__' && dept) {
+      await fetch('/criar_label', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({column_id: 'color_mm4gtmap', label: dept})
+      });
+    }
+    if (liSel === '__novo__' && localItem) {
+      await fetch('/criar_label', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({column_id: 'color_mm4gaz07', label: localItem})
+      });
+    }
+
+    const itensSelecionados = nf.itens
+      .map((item, iIdx) => {
+        const cb = document.querySelector(`#row-${nfIdx}-${iIdx} input[type=checkbox]`);
+        if (!cb || !cb.checked) return null;
+        return {
+          nome: document.getElementById(`nome-${nfIdx}-${iIdx}`).value,
+          quantidade: parseFloat(document.getElementById(`qtd-${nfIdx}-${iIdx}`).value),
+          valor_unitario: parseFloat(document.getElementById(`valor-${nfIdx}-${iIdx}`).value),
+        };
+      })
+      .filter(Boolean);
+
+    if (!itensSelecionados.length) continue;
+
+    const formData = new FormData();
+    formData.append('pdf', nf._file);
+    formData.append('itens', JSON.stringify(itensSelecionados));
+    formData.append('numero_nf', nf.numero_nf);
+    formData.append('data_emissao', document.getElementById(`data-${nfIdx}`).value);
+    formData.append('canal_compra', canal);
+    formData.append('local', document.getElementById(`local-${nfIdx}`).value);
+    formData.append('departamento', dept);
+    formData.append('local_item', localItem);
+    formData.append('obs_local', document.getElementById(`obs-${nfIdx}`).value);
+
+    try {
+      const res = await fetch('/enviar', { method: 'POST', body: formData });
+      const result = await res.json();
+      if (result.sucesso) {
+        salvarNfEnviada(nf.numero_nf);
+        totalEnviados += result.total;
+      }
+    } catch(e) { console.error(e); }
   }
+
+  document.getElementById('loading-envio').style.display = 'none';
+  document.querySelector('.btn-success').disabled = false;
+  document.getElementById('tela-revisao').style.display = 'none';
+  document.getElementById('tela-sucesso').style.display = 'block';
+  document.getElementById('msg-sucesso').textContent = `${totalEnviados} item(s) inserido(s) no Monday com sucesso!`;
 }
 
 function reiniciar() {
-  dadosNF = null;
+  nfsProcessadas = [];
   document.getElementById('pdf-input').value = '';
+  document.getElementById('lista-arquivos').innerHTML = '';
+  document.getElementById('blocos-nf').innerHTML = '';
+  document.getElementById('alertas-duplicata').innerHTML = '';
   document.getElementById('tela-sucesso').style.display = 'none';
   document.getElementById('tela-upload').style.display = 'block';
 }
